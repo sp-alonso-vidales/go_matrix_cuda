@@ -52,8 +52,8 @@ func TestMultTrans(t *testing.T) {
 		}
 	}
 
-	expectedRes := Mult(m1, Trans(m2))
-	result := MultTrans(m1, m2)
+	expectedRes := mult(m1, trans(m2))
+	result := multTrans(m1, m2)
 
 	for i := 0; i < len(result); i++ {
 		for j := 0; j < len(result[0]); j++ {
@@ -184,7 +184,7 @@ func TestCudaNegMatrix(t *testing.T) {
 		[]float64{-2, 3.5},
 	}
 
-	result := Neg(m1)
+	result := neg(m1)
 
 	expectedRes := [][]float64{
 		[]float64{-1, -5},
@@ -223,8 +223,8 @@ func TestCudaNoCudaMult(t *testing.T) {
 		[]float64{3},
 	}
 
-	cudaRes := Mult(m1, m2)
-	expected := MultNoCuda(m1, m2)
+	cudaRes := mult(m1, m2)
+	expected := multNoCuda(m1, m2)
 	for i := 0; i < len(cudaRes); i++ {
 		for j := 0; j < len(cudaRes[0]); j++ {
 			if cudaRes[i][j] != expected[i][j] {
@@ -253,8 +253,8 @@ func TestMatrixBigMultiplication(t *testing.T) {
 		}
 	}
 
-	cudaRes := Mult(m2, m1)
-	expected := MultNoCuda(m2, m1)
+	cudaRes := mult(m2, m1)
+	expected := multNoCuda(m2, m1)
 
 	for i := 0; i < width; i++ {
 		for j := 0; j < width; j++ {
@@ -284,8 +284,8 @@ func TestMatrixBigSub(t *testing.T) {
 		}
 	}
 
-	cudaRes := Sub(m1, m2)
-	expected := SubNoCuda(m1, m2)
+	cudaRes := sub(m1, m2)
+	expected := subNoCuda(m1, m2)
 
 	for i := 0; i < height; i++ {
 		for j := 0; j < width; j++ {
@@ -313,7 +313,7 @@ func TestCudaMatrixMultiplication(t *testing.T) {
 		[]float64{37, 110},
 	}
 
-	result := CudaMult(m1, m2).GetMatrixFromCuda()
+	result := Mult(m1, m2).GetMatrixFromCuda()
 
 	for i := 0; i < len(result); i++ {
 		for j := 0; j < len(result); j++ {
@@ -341,7 +341,7 @@ func TestMatrixMultiplication(t *testing.T) {
 		[]float64{37, 110},
 	}
 
-	result := Mult(m1, m2)
+	result := mult(m1, m2)
 
 	for i := 0; i < len(result); i++ {
 		for j := 0; j < len(result); j++ {
@@ -368,7 +368,7 @@ func TestMatrixSum(t *testing.T) {
 		[]float64{10, 9, 14},
 	}
 
-	result := Sum(m1, m2)
+	result := sum(m1, m2)
 
 	for i := 0; i < len(result); i++ {
 		for j := 0; j < len(result); j++ {
@@ -395,7 +395,7 @@ func TestMultElems(t *testing.T) {
 		[]float64{9, 20, 49},
 	}
 
-	result := MultElems(m1, m2)
+	result := multElems(m1, m2)
 
 	for i := 0; i < len(result); i++ {
 		for j := 0; j < len(result); j++ {
@@ -422,7 +422,7 @@ func TestMatrixSub(t *testing.T) {
 		[]float64{8, 1, 0},
 	}
 
-	result := Sub(m1, m2)
+	result := sub(m1, m2)
 
 	for i := 0; i < len(result); i++ {
 		for j := 0; j < len(result); j++ {
@@ -446,7 +446,7 @@ func TestMatrixTrans(t *testing.T) {
 		[]float64{1, 7},
 	}
 
-	result := Trans(m1)
+	result := trans(m1)
 
 	for i := 0; i < len(result); i++ {
 		for j := 0; j < len(result[0]); j++ {

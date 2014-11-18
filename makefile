@@ -16,14 +16,10 @@ updatedeps:
 
 format:
 	@echo "$(OK_COLOR)==> Formatting$(NO_COLOR)"
-	go fmt *.go
-
-test: deps
-	@echo "$(OK_COLOR)==> Testing$(NO_COLOR)"
-	go test ./...
+	go fmt matrix.go matrix_test.go
 
 lint:
 	@echo "$(OK_COLOR)==> Linting$(NO_COLOR)"
-	golint .
+	golint matrix.go matrix_test.go
 
-all: format lint test
+all: format lint
