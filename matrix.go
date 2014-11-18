@@ -4,8 +4,8 @@
 package mt
 
 import (
-	"math"
 	"github.com/barnex/cuda5/cu"
+	"math"
 	"unsafe"
 )
 
@@ -16,6 +16,7 @@ type CudaMatrix struct {
 }
 
 const DEBUG = false
+
 var cudaDevice = 0
 
 var currentBuff = "default"
@@ -153,8 +154,8 @@ func AddToBuff(ptr cu.DevicePtr) {
 }
 
 func FreeAllMem() {
-	for _, buff := range(usedMem) {
-		for m, _ := range(buff) {
+	for _, buff := range usedMem {
+		for m, _ := range buff {
 			cu.MemFree(m)
 		}
 	}
@@ -164,7 +165,7 @@ func FreeAllMem() {
 }
 
 func FreeMem() {
-	for m, _ := range(usedMem[currentBuff]) {
+	for m, _ := range usedMem[currentBuff] {
 		cu.MemFree(m)
 		delete(usedMem[currentBuff], m)
 	}
@@ -175,7 +176,7 @@ func (p *CudaMatrix) Free() {
 	cu.MemFree(p.m)
 }
 
-func CudaMemAlloc(bytes int64) (cu.DevicePtr) {
+func CudaMemAlloc(bytes int64) cu.DevicePtr {
 	p := cu.MemAlloc(bytes)
 	AddToBuff(p)
 
@@ -183,30 +184,30 @@ func CudaMemAlloc(bytes int64) (cu.DevicePtr) {
 }
 
 func InitCudaMatrix(w int, h int) (p *CudaMatrix) {
-	size := int64(w * h) * cu.SIZEOF_FLOAT64
+	size := int64(w*h) * cu.SIZEOF_FLOAT64
 	InitCuda()
-	p = &CudaMatrix {
+	p = &CudaMatrix{
 		w: w,
 		h: h,
 		m: CudaMemAlloc(size),
 	}
 	// Initialize this var to zeros
-	aux := make([]float64, w * h)
+	aux := make([]float64, w*h)
 	cu.MemcpyHtoD(p.m, unsafe.Pointer(&aux[0]), size)
 
 	return
 }
 
-func (m *CudaMatrix) H() (int) {
+func (m *CudaMatrix) H() int {
 	return m.h
 }
 
-func (m *CudaMatrix) W() (int) {
+func (m *CudaMatrix) W() int {
 	return m.w
 }
 
-func (m *CudaMatrix) CopyTo(t *CudaMatrix) (*CudaMatrix) {
-	size := int64(m.w * m.h) * cu.SIZEOF_FLOAT64
+func (m *CudaMatrix) CopyTo(t *CudaMatrix) *CudaMatrix {
+	size := int64(m.w*m.h) * cu.SIZEOF_FLOAT64
 	InitCuda()
 	if t.w == 0 && t.h == 0 {
 		t.m = CudaMemAlloc(size)
@@ -219,10 +220,10 @@ func (m *CudaMatrix) CopyTo(t *CudaMatrix) (*CudaMatrix) {
 }
 
 func (m *CudaMatrix) Copy() (r *CudaMatrix) {
-	size := int64(m.w * m.h) * cu.SIZEOF_FLOAT64
+	size := int64(m.w*m.h) * cu.SIZEOF_FLOAT64
 
 	InitCuda()
-	r = &CudaMatrix {
+	r = &CudaMatrix{
 		m: CudaMemAlloc(size),
 		w: m.w,
 		h: m.h,
@@ -233,17 +234,17 @@ func (m *CudaMatrix) Copy() (r *CudaMatrix) {
 }
 
 func MoveToCuda(m [][]float64, p *CudaMatrix) {
-	linealM := make([]float64, len(m) * len(m[0]))
+	linealM := make([]float64, len(m)*len(m[0]))
 	for i := 0; i < len(m); i++ {
 		for j := 0; j < len(m[0]); j++ {
-			linealM[(i * p.w) + j] = m[i][j]
+			linealM[(i*p.w)+j] = m[i][j]
 		}
 	}
 	size := int64(len(linealM)) * cu.SIZEOF_FLOAT64
 
 	InitCuda()
 	if p.w == 0 && p.h == 0 {
-		size := int64(len(m[0]) * len(m)) * cu.SIZEOF_FLOAT64
+		size := int64(len(m[0])*len(m)) * cu.SIZEOF_FLOAT64
 		p.m = CudaMemAlloc(size)
 		p.w = len(m[0])
 		p.h = len(m)
@@ -254,15 +255,15 @@ func MoveToCuda(m [][]float64, p *CudaMatrix) {
 }
 
 func GetCudaMatrix(m [][]float64) (p *CudaMatrix) {
-	p = &CudaMatrix {
+	p = &CudaMatrix{
 		w: len(m[0]),
 		h: len(m),
 	}
 
-	linealM := make([]float64, len(m) * len(m[0]))
+	linealM := make([]float64, len(m)*len(m[0]))
 	for i := 0; i < len(m); i++ {
 		for j := 0; j < len(m[0]); j++ {
-			linealM[(i * p.w) + j] = m[i][j]
+			linealM[(i*p.w)+j] = m[i][j]
 		}
 	}
 	size := int64(len(linealM)) * cu.SIZEOF_FLOAT64
@@ -274,7 +275,7 @@ func GetCudaMatrix(m [][]float64) (p *CudaMatrix) {
 	return
 }
 
-func (p *CudaMatrix) TransOneDimMatrix() (*CudaMatrix) {
+func (p *CudaMatrix) TransOneDimMatrix() *CudaMatrix {
 	p.w ^= p.h
 	p.h ^= p.w
 	p.w ^= p.h
@@ -283,20 +284,20 @@ func (p *CudaMatrix) TransOneDimMatrix() (*CudaMatrix) {
 }
 
 func (p *CudaMatrix) GetMatrixFromCuda() (m [][]float64) {
-	buff := make([]float64, p.h * p.w)
+	buff := make([]float64, p.h*p.w)
 	m = make([][]float64, p.h)
 
 	InitCuda()
-	cu.MemcpyDtoH(unsafe.Pointer(&buff[0]), p.m, int64(len(buff)) * cu.SIZEOF_FLOAT64)
+	cu.MemcpyDtoH(unsafe.Pointer(&buff[0]), p.m, int64(len(buff))*cu.SIZEOF_FLOAT64)
 	for i := 0; i < p.h; i++ {
-		m[i] = buff[i * p.w : (i + 1) * p.w]
+		m[i] = buff[i*p.w : (i+1)*p.w]
 	}
 
 	return
 }
 
 // Returns the rm of Multiply the given two matrix
-func CudaMultAllElemsTo(m1 *CudaMatrix, m2 *CudaMatrix, rm *CudaMatrix) (*CudaMatrix) {
+func CudaMultAllElemsTo(m1 *CudaMatrix, m2 *CudaMatrix, rm *CudaMatrix) *CudaMatrix {
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(m1.w, m1.h)
 
 	args := []unsafe.Pointer{
@@ -328,7 +329,7 @@ func CudaMultAllElems(m1 *CudaMatrix, m2 *CudaMatrix) (rm *CudaMatrix) {
 	rm = &CudaMatrix{
 		w: m2.w,
 		h: m1.h,
-		m: CudaMemAlloc(int64(m2.w * m1.h) * cu.SIZEOF_FLOAT64),
+		m: CudaMemAlloc(int64(m2.w*m1.h) * cu.SIZEOF_FLOAT64),
 	}
 
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(m1.w, m1.h)
@@ -361,23 +362,23 @@ func MultElems(m1 [][]float64, m2 [][]float64) (rm [][]float64) {
 	return
 }
 
-func (m *CudaMatrix) SetPosTo(val float64, x int, y int) (*CudaMatrix) {
-	buff := make([]float64, m.h * m.w)
+func (m *CudaMatrix) SetPosTo(val float64, x int, y int) *CudaMatrix {
+	buff := make([]float64, m.h*m.w)
 	buffPoint := unsafe.Pointer(&buff[0])
 	size := int64(len(buff)) * cu.SIZEOF_FLOAT64
 	InitCuda()
 	cu.MemcpyDtoH(buffPoint, m.m, size)
-	buff[(y * m.w) + x] = val
+	buff[(y*m.w)+x] = val
 	cu.MemcpyHtoD(m.m, buffPoint, size)
 
 	return m
 }
 
-func (m *CudaMatrix) RemoveBiasTo(rm *CudaMatrix) (*CudaMatrix) {
+func (m *CudaMatrix) RemoveBiasTo(rm *CudaMatrix) *CudaMatrix {
 	if rm.w == 0 && rm.h == 0 {
 		rm.w = m.w - 1
 		rm.h = m.h
-		rm.m = CudaMemAlloc(int64(rm.w * rm.h) * cu.SIZEOF_FLOAT64)
+		rm.m = CudaMemAlloc(int64(rm.w*rm.h) * cu.SIZEOF_FLOAT64)
 	}
 
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(rm.w, rm.h)
@@ -402,7 +403,7 @@ func (m *CudaMatrix) RemoveBias() (rm *CudaMatrix) {
 	rm = &CudaMatrix{
 		w: m.w - 1,
 		h: m.h,
-		m: CudaMemAlloc(int64((m.w - 1) * m.h) * cu.SIZEOF_FLOAT64),
+		m: CudaMemAlloc(int64((m.w-1)*m.h) * cu.SIZEOF_FLOAT64),
 	}
 
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(rm.w, rm.h)
@@ -421,13 +422,13 @@ func (m *CudaMatrix) RemoveBias() (rm *CudaMatrix) {
 	return
 }
 
-func (m *CudaMatrix) TransTo(rm *CudaMatrix) (*CudaMatrix) {
+func (m *CudaMatrix) TransTo(rm *CudaMatrix) *CudaMatrix {
 	InitCuda()
 
-	if rm.w + rm.h == 0 {
+	if rm.w+rm.h == 0 {
 		rm.w = m.h
 		rm.h = m.w
-		rm.m = CudaMemAlloc(int64(m.w * m.h) * cu.SIZEOF_FLOAT64)
+		rm.m = CudaMemAlloc(int64(m.w*m.h) * cu.SIZEOF_FLOAT64)
 	}
 
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(rm.w, rm.h)
@@ -453,7 +454,7 @@ func (m *CudaMatrix) Trans() (rm *CudaMatrix) {
 	rm = &CudaMatrix{
 		w: m.h,
 		h: m.w,
-		m: CudaMemAlloc(int64(m.w * m.h) * cu.SIZEOF_FLOAT64),
+		m: CudaMemAlloc(int64(m.w*m.h) * cu.SIZEOF_FLOAT64),
 	}
 
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(rm.w, rm.h)
@@ -473,7 +474,7 @@ func (m *CudaMatrix) Trans() (rm *CudaMatrix) {
 	return
 }
 
-func (m *CudaMatrix) AddBiasTo(rm *CudaMatrix) (*CudaMatrix) {
+func (m *CudaMatrix) AddBiasTo(rm *CudaMatrix) *CudaMatrix {
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(rm.w, rm.h)
 
 	args := []unsafe.Pointer{
@@ -492,13 +493,13 @@ func (m *CudaMatrix) AddBiasTo(rm *CudaMatrix) (*CudaMatrix) {
 	return rm
 }
 
-func (m *CudaMatrix) RemoveBiasTopTo(rm *CudaMatrix) (*CudaMatrix) {
+func (m *CudaMatrix) RemoveBiasTopTo(rm *CudaMatrix) *CudaMatrix {
 	InitCuda()
 
-	if rm.w + rm.h == 0 {
+	if rm.w+rm.h == 0 {
 		rm.w = m.w
 		rm.h = m.h - 1
-		rm.m = CudaMemAlloc(int64(m.w * (m.h + 1)) * cu.SIZEOF_FLOAT64)
+		rm.m = CudaMemAlloc(int64(m.w*(m.h+1)) * cu.SIZEOF_FLOAT64)
 	}
 
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(rm.w, rm.h)
@@ -524,7 +525,7 @@ func (m *CudaMatrix) RemoveBiasTop() (rm *CudaMatrix) {
 	rm = &CudaMatrix{
 		w: m.w,
 		h: m.h - 1,
-		m: CudaMemAlloc(int64(m.w * (m.h + 1)) * cu.SIZEOF_FLOAT64),
+		m: CudaMemAlloc(int64(m.w*(m.h+1)) * cu.SIZEOF_FLOAT64),
 	}
 
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(rm.w, rm.h)
@@ -544,13 +545,13 @@ func (m *CudaMatrix) RemoveBiasTop() (rm *CudaMatrix) {
 	return
 }
 
-func (m *CudaMatrix) AddBiasTopTo(rm *CudaMatrix) (*CudaMatrix) {
+func (m *CudaMatrix) AddBiasTopTo(rm *CudaMatrix) *CudaMatrix {
 	InitCuda()
 
 	if rm.w == 0 && rm.h == 0 {
 		rm.h = m.h + 1
 		rm.w = m.w
-		rm.m = CudaMemAlloc(int64(m.w * (m.h + 1)) * cu.SIZEOF_FLOAT64)
+		rm.m = CudaMemAlloc(int64(m.w*(m.h+1)) * cu.SIZEOF_FLOAT64)
 	}
 
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(rm.w, rm.h)
@@ -575,7 +576,7 @@ func (m *CudaMatrix) AddBiasTop() (rm *CudaMatrix) {
 	rm = &CudaMatrix{
 		w: m.w,
 		h: m.h + 1,
-		m: CudaMemAlloc(int64(m.w * (m.h + 1)) * cu.SIZEOF_FLOAT64),
+		m: CudaMemAlloc(int64(m.w*(m.h+1)) * cu.SIZEOF_FLOAT64),
 	}
 
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(rm.w, rm.h)
@@ -600,7 +601,7 @@ func (m *CudaMatrix) AddBias() (rm *CudaMatrix) {
 	rm = &CudaMatrix{
 		w: m.w + 1,
 		h: m.h,
-		m: CudaMemAlloc(int64((m.w + 1) * m.h) * cu.SIZEOF_FLOAT64),
+		m: CudaMemAlloc(int64((m.w+1)*m.h) * cu.SIZEOF_FLOAT64),
 	}
 
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(rm.w, rm.h)
@@ -619,7 +620,7 @@ func (m *CudaMatrix) AddBias() (rm *CudaMatrix) {
 	return
 }
 
-func (m *CudaMatrix) MultBy(by float64) (*CudaMatrix) {
+func (m *CudaMatrix) MultBy(by float64) *CudaMatrix {
 	InitCuda()
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(m.w, m.h)
 
@@ -637,7 +638,7 @@ func (m *CudaMatrix) MultBy(by float64) (*CudaMatrix) {
 	return m
 }
 
-func (m *CudaMatrix) SumAll() (float64) {
+func (m *CudaMatrix) SumAll() float64 {
 	// Note: Don't split in blocks
 	InitCuda()
 
@@ -663,7 +664,7 @@ func (m *CudaMatrix) SumAll() (float64) {
 	return *(*float64)(sumP)
 }
 
-func (m *CudaMatrix) SetBiasToZero() (*CudaMatrix) {
+func (m *CudaMatrix) SetBiasToZero() *CudaMatrix {
 	InitCuda()
 	var gridsH, resH int
 
@@ -704,42 +705,42 @@ func (m *CudaMatrix) applyFunc(function cu.Function) {
 }
 
 // Returns the rm of Multiply the given two matrix
-func (m *CudaMatrix) Log() (*CudaMatrix) {
+func (m *CudaMatrix) Log() *CudaMatrix {
 	m.applyFunc(logMatrixMod)
 
 	return m
 }
 
 // Returns the rm of Multiply the given two matrix
-func (m *CudaMatrix) SigmoidGradient() (*CudaMatrix) {
+func (m *CudaMatrix) SigmoidGradient() *CudaMatrix {
 	m.applyFunc(sigmoidGradMod)
 
 	return m
 }
 
 // Returns the rm of Multiply the given two matrix
-func (m *CudaMatrix) Sigmoid() (*CudaMatrix) {
+func (m *CudaMatrix) Sigmoid() *CudaMatrix {
 	m.applyFunc(sigmoidMatrixMod)
 
 	return m
 }
 
 // Returns the rm of Multiply the given two matrix
-func (m *CudaMatrix) OneMinus() (*CudaMatrix) {
+func (m *CudaMatrix) OneMinus() *CudaMatrix {
 	m.applyFunc(oneMinusMod)
 
 	return m
 }
 
 // Returns the rm of Multiply the given two matrix
-func (m *CudaMatrix) PowTwo() (*CudaMatrix) {
+func (m *CudaMatrix) PowTwo() *CudaMatrix {
 	m.applyFunc(powTwoMod)
 
 	return m
 }
 
 // Returns the rm of Multiply the given two matrix
-func (m *CudaMatrix) Neg() (*CudaMatrix) {
+func (m *CudaMatrix) Neg() *CudaMatrix {
 	m.applyFunc(negMatrixMod)
 
 	return m
@@ -773,7 +774,7 @@ func MultElemsNoCuda(m1 [][]float64, m2 [][]float64) (rm [][]float64) {
 
 func getGridThreadsFromSize(w, h int) (resW, resH, gridsW, gridsH, size int) {
 	if w > h {
-		if w > maxNumThreads{
+		if w > maxNumThreads {
 			resW = maxNumThreads
 			resH = 1
 		} else {
@@ -781,7 +782,7 @@ func getGridThreadsFromSize(w, h int) (resW, resH, gridsW, gridsH, size int) {
 			resH = int(float64(maxNumThreads) / float64(resW))
 		}
 	} else {
-		if h > maxNumThreads{
+		if h > maxNumThreads {
 			resH = maxNumThreads
 			resW = 1
 		} else {
@@ -811,7 +812,7 @@ func CudaMult(m1 *CudaMatrix, m2 *CudaMatrix) (rm *CudaMatrix) {
 	rm = &CudaMatrix{
 		w: m2.w,
 		h: m1.h,
-		m: CudaMemAlloc(int64(m2.w * m1.h) * cu.SIZEOF_FLOAT64),
+		m: CudaMemAlloc(int64(m2.w*m1.h) * cu.SIZEOF_FLOAT64),
 	}
 
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(rm.w, rm.h)
@@ -832,7 +833,7 @@ func CudaMult(m1 *CudaMatrix, m2 *CudaMatrix) (rm *CudaMatrix) {
 	return
 }
 
-func CudaMultTo(m1 *CudaMatrix, m2 *CudaMatrix, rm *CudaMatrix) (*CudaMatrix) {
+func CudaMultTo(m1 *CudaMatrix, m2 *CudaMatrix, rm *CudaMatrix) *CudaMatrix {
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(rm.w, rm.h)
 
 	args := []unsafe.Pointer{
@@ -882,7 +883,7 @@ func MultNoCuda(m1 [][]float64, m2 [][]float64) (rm [][]float64) {
 }
 
 // Returns the rm of Multiply the given two matrix
-func CudaSubTo(m1 *CudaMatrix, m2 *CudaMatrix, rm *CudaMatrix) (*CudaMatrix) {
+func CudaSubTo(m1 *CudaMatrix, m2 *CudaMatrix, rm *CudaMatrix) *CudaMatrix {
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(rm.w, rm.h)
 
 	args := []unsafe.Pointer{
@@ -909,7 +910,7 @@ func CudaSub(m1 *CudaMatrix, m2 *CudaMatrix) (rm *CudaMatrix) {
 	rm = &CudaMatrix{
 		w: m1.w,
 		h: m1.h,
-		m: CudaMemAlloc(int64(m1.w * m1.h) * cu.SIZEOF_FLOAT64),
+		m: CudaMemAlloc(int64(m1.w*m1.h) * cu.SIZEOF_FLOAT64),
 	}
 
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(rm.w, rm.h)
@@ -957,7 +958,7 @@ func SubNoCuda(m1 [][]float64, m2 [][]float64) (rm [][]float64) {
 }
 
 // Returns the rm of Multiply the given two matrix
-func CudaSumTo(m1 *CudaMatrix, m2 *CudaMatrix, rm *CudaMatrix) (*CudaMatrix) {
+func CudaSumTo(m1 *CudaMatrix, m2 *CudaMatrix, rm *CudaMatrix) *CudaMatrix {
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(rm.w, rm.h)
 
 	args := []unsafe.Pointer{
@@ -982,7 +983,7 @@ func CudaSum(m1 *CudaMatrix, m2 *CudaMatrix) (rm *CudaMatrix) {
 	rm = &CudaMatrix{
 		w: m1.w,
 		h: m1.h,
-		m: CudaMemAlloc(int64(m1.w * m1.h) * cu.SIZEOF_FLOAT64),
+		m: CudaMemAlloc(int64(m1.w*m1.h) * cu.SIZEOF_FLOAT64),
 	}
 
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(rm.w, rm.h)
@@ -1014,7 +1015,7 @@ func Sum(m1 [][]float64, m2 [][]float64) (rm [][]float64) {
 	return
 }
 
-func CudaMultTransTo(m1 *CudaMatrix, m2 *CudaMatrix, rm *CudaMatrix) (*CudaMatrix) {
+func CudaMultTransTo(m1 *CudaMatrix, m2 *CudaMatrix, rm *CudaMatrix) *CudaMatrix {
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(rm.w, rm.h)
 
 	InitCuda()
@@ -1042,7 +1043,7 @@ func CudaMultTrans(m1 *CudaMatrix, m2 *CudaMatrix) (rm *CudaMatrix) {
 	rm = &CudaMatrix{
 		w: m2.h,
 		h: m1.h,
-		m: CudaMemAlloc(int64(m2.h * m1.h) * cu.SIZEOF_FLOAT64),
+		m: CudaMemAlloc(int64(m2.h*m1.h) * cu.SIZEOF_FLOAT64),
 	}
 
 	resW, resH, gridsW, gridsH, resultSize := getGridThreadsFromSize(rm.w, rm.h)
@@ -1278,12 +1279,12 @@ func Copy(m [][]float64) (rm [][]float64) {
 func Concat(m1 [][]float64, m2 [][]float64) (rm [][]float64) {
 	rm = make([][]float64, len(m1))
 	for i := 0; i < len(m1); i++ {
-		rm[i] = make([]float64, len(m1[i]) + len(m2[i]))
+		rm[i] = make([]float64, len(m1[i])+len(m2[i]))
 		for j := 0; j < len(m1[i]); j++ {
 			rm[i][j] = m1[i][j]
 		}
 		for j := 0; j < len(m2[i]); j++ {
-			rm[i][j + len(m1[i])] = m2[i][j]
+			rm[i][j+len(m1[i])] = m2[i][j]
 		}
 	}
 

@@ -1,11 +1,12 @@
 package mt
 
 import (
-	//"fmt"
+	"fmt"
 	"testing"
 )
 
 func TestAddBiasTop(t *testing.T) {
+	fmt.Println("TestAddBiasTop")
 	m1 := GetCudaMatrix([][]float64{
 		[]float64{1, 5, 5, 6},
 		[]float64{1, 9, 8, 3},
@@ -31,6 +32,7 @@ func TestAddBiasTop(t *testing.T) {
 }
 
 func TestMultTrans(t *testing.T) {
+	fmt.Println("TestMultTrans")
 	height := 35
 	width := 20
 	m1 := make([][]float64, height)
@@ -63,6 +65,7 @@ func TestMultTrans(t *testing.T) {
 }
 
 func TestMatrixBigSumAll(t *testing.T) {
+	fmt.Println("TestMatrixBigSumAll")
 	height := 2500
 	width := 3
 	m1 := make([][]float64, height)
@@ -82,6 +85,7 @@ func TestMatrixBigSumAll(t *testing.T) {
 }
 
 func TestCudaTrans(t *testing.T) {
+	fmt.Println("TestCudaTrans")
 	m1 := GetCudaMatrix([][]float64{
 		[]float64{1, 5, 5, 6},
 		[]float64{1, 9, 8, 3},
@@ -107,6 +111,7 @@ func TestCudaTrans(t *testing.T) {
 }
 
 func TestCudaSetBiasToZero(t *testing.T) {
+	fmt.Println("TestCudaSetBiasToZero")
 	m1 := GetCudaMatrix([][]float64{
 		[]float64{1, 5},
 		[]float64{1, 9},
@@ -131,6 +136,7 @@ func TestCudaSetBiasToZero(t *testing.T) {
 }
 
 func TestCudaAddBias(t *testing.T) {
+	fmt.Println("TestCudaAddBias")
 	m1 := GetCudaMatrix([][]float64{
 		[]float64{1, 5},
 		[]float64{1, 9},
@@ -171,6 +177,7 @@ func TestCudaAddBias(t *testing.T) {
 }
 
 func TestCudaNegMatrix(t *testing.T) {
+	fmt.Println("TestCudaNegMatrix")
 	m1 := [][]float64{
 		[]float64{1, 5},
 		[]float64{1, 9},
@@ -195,6 +202,7 @@ func TestCudaNegMatrix(t *testing.T) {
 }
 
 func TestCudaNoCudaMult(t *testing.T) {
+	fmt.Println("TestCudaNoCudaMult")
 
 	m1 := [][]float64{
 		[]float64{1, 5},
@@ -227,6 +235,7 @@ func TestCudaNoCudaMult(t *testing.T) {
 }
 
 func TestMatrixBigMultiplication(t *testing.T) {
+	fmt.Println("TestMatrixBigMultiplication")
 	height := 40
 	width := 60
 	m1 := make([][]float64, height)
@@ -257,6 +266,7 @@ func TestMatrixBigMultiplication(t *testing.T) {
 }
 
 func TestMatrixBigSub(t *testing.T) {
+	fmt.Println("TestMatrixBigSub")
 	height := 40
 	width := 60
 	m1 := make([][]float64, height)
@@ -270,7 +280,7 @@ func TestMatrixBigSub(t *testing.T) {
 	for i := 0; i < height; i++ {
 		m2[i] = make([]float64, width)
 		for j := 0; j < width; j++ {
-			m2[i][j] = float64(i + j) + 0.5
+			m2[i][j] = float64(i+j) + 0.5
 		}
 	}
 
@@ -287,6 +297,7 @@ func TestMatrixBigSub(t *testing.T) {
 }
 
 func TestCudaMatrixMultiplication(t *testing.T) {
+	fmt.Println("TestCudaMatrixMultiplication")
 	m1 := GetCudaMatrix([][]float64{
 		[]float64{3, 2, 1},
 		[]float64{9, 5, 7},
@@ -302,20 +313,19 @@ func TestCudaMatrixMultiplication(t *testing.T) {
 		[]float64{37, 110},
 	}
 
-	for i := 0; i < 10000; i++ {
-		result := CudaMult(m1, m2).GetMatrixFromCuda()
+	result := CudaMult(m1, m2).GetMatrixFromCuda()
 
-		for i := 0; i < len(result); i++ {
-			for j := 0; j < len(result); j++ {
-				if result[i][j] != expectedRes[i][j] {
-					t.Error("Expected result on pos:", i, j, ":", expectedRes[i][j], "but obtained:", result[i][j])
-				}
+	for i := 0; i < len(result); i++ {
+		for j := 0; j < len(result); j++ {
+			if result[i][j] != expectedRes[i][j] {
+				t.Error("Expected result on pos:", i, j, ":", expectedRes[i][j], "but obtained:", result[i][j])
 			}
 		}
 	}
 }
 
 func TestMatrixMultiplication(t *testing.T) {
+	fmt.Println("TestMatrixMultiplication")
 	m1 := [][]float64{
 		[]float64{3, 2, 1},
 		[]float64{9, 5, 7},
@@ -331,20 +341,19 @@ func TestMatrixMultiplication(t *testing.T) {
 		[]float64{37, 110},
 	}
 
-	for i := 0; i < 10000; i++ {
-		result := Mult(m1, m2)
+	result := Mult(m1, m2)
 
-		for i := 0; i < len(result); i++ {
-			for j := 0; j < len(result); j++ {
-				if result[i][j] != expectedRes[i][j] {
-					t.Error("Expected result on pos:", i, j, ":", expectedRes[i][j], "but obtained:", result[i][j])
-				}
+	for i := 0; i < len(result); i++ {
+		for j := 0; j < len(result); j++ {
+			if result[i][j] != expectedRes[i][j] {
+				t.Error("Expected result on pos:", i, j, ":", expectedRes[i][j], "but obtained:", result[i][j])
 			}
 		}
 	}
 }
 
 func TestMatrixSum(t *testing.T) {
+	fmt.Println("TestMatrixSum")
 	m1 := [][]float64{
 		[]float64{3, 2, 1},
 		[]float64{9, 5, 7},
@@ -371,6 +380,7 @@ func TestMatrixSum(t *testing.T) {
 }
 
 func TestMultElems(t *testing.T) {
+	fmt.Println("TestMultElems")
 	m1 := [][]float64{
 		[]float64{3, 2, 1},
 		[]float64{9, 5, 7},
@@ -397,6 +407,7 @@ func TestMultElems(t *testing.T) {
 }
 
 func TestMatrixSub(t *testing.T) {
+	fmt.Println("TestMatrixSub")
 	m1 := [][]float64{
 		[]float64{3, 2, 1},
 		[]float64{9, 5, 7},
@@ -423,6 +434,7 @@ func TestMatrixSub(t *testing.T) {
 }
 
 func TestMatrixTrans(t *testing.T) {
+	fmt.Println("TestMatrixTrans")
 	m1 := [][]float64{
 		[]float64{3, 2, 1},
 		[]float64{9, 5, 7},
@@ -446,6 +458,7 @@ func TestMatrixTrans(t *testing.T) {
 }
 
 func TestSumAll(t *testing.T) {
+	fmt.Println("TestSumAll")
 	m := [][]float64{
 		[]float64{3, 2, 1},
 		[]float64{9, 5, 7},
@@ -459,6 +472,7 @@ func TestSumAll(t *testing.T) {
 }
 
 func TestApply(t *testing.T) {
+	fmt.Println("TestApply")
 	m := [][]float64{
 		[]float64{4, 2, 1},
 		[]float64{8, 3, 6},
@@ -485,6 +499,7 @@ func TestApply(t *testing.T) {
 }
 
 func TestDet(t *testing.T) {
+	fmt.Println("TestDet")
 	m := [][]float64{
 		[]float64{1, 3, 1},
 		[]float64{1, 1, 2},
@@ -523,6 +538,7 @@ func TestDet(t *testing.T) {
 }
 
 func TestMinors(t *testing.T) {
+	fmt.Println("TestMinors")
 	m := [][]float64{
 		[]float64{1, 3, 1},
 		[]float64{1, 1, 2},
@@ -547,6 +563,7 @@ func TestMinors(t *testing.T) {
 }
 
 func TestCofactor(t *testing.T) {
+	fmt.Println("TestCofactor")
 	m := [][]float64{
 		[]float64{1, 3, 1},
 		[]float64{1, -1, -2},
@@ -571,6 +588,7 @@ func TestCofactor(t *testing.T) {
 }
 
 func TestInv(t *testing.T) {
+	fmt.Println("TestInv")
 	m := [][]float64{
 		[]float64{1, 3, 1},
 		[]float64{1, 1, 2},
@@ -595,6 +613,7 @@ func TestInv(t *testing.T) {
 }
 
 func TestDiv(t *testing.T) {
+	fmt.Println("TestDiv")
 	m1 := [][]float64{
 		[]float64{1, 2, 3},
 		[]float64{3, 2, 1},
@@ -608,16 +627,16 @@ func TestDiv(t *testing.T) {
 	}
 
 	expectedRes := [][]float64{
-		[]float64{7.0/10.0, 3.0/10.0, 0},
-		[]float64{-3.0/10.0, 7.0/10.0, 0},
-		[]float64{6.0/5.0, 1.0/5.0, -1},
+		[]float64{7.0 / 10.0, 3.0 / 10.0, 0},
+		[]float64{-3.0 / 10.0, 7.0 / 10.0, 0},
+		[]float64{6.0 / 5.0, 1.0 / 5.0, -1},
 	}
 
 	result := Div(m1, m2)
 
 	for i := 0; i < len(result); i++ {
 		for j := 0; j < len(result); j++ {
-			if result[i][j] - expectedRes[i][j] > 0.000001 {
+			if result[i][j]-expectedRes[i][j] > 0.000001 {
 				t.Error("Expected result on pos:", i, j, ":", expectedRes[i][j], "but obtained:", result[i][j])
 			}
 		}
@@ -625,6 +644,7 @@ func TestDiv(t *testing.T) {
 }
 
 func TestConcat(t *testing.T) {
+	fmt.Println("TestConcat")
 	m1 := [][]float64{
 		[]float64{1, 2, 3},
 		[]float64{3, 2, 1},
@@ -647,7 +667,7 @@ func TestConcat(t *testing.T) {
 
 	for i := 0; i < len(result); i++ {
 		for j := 0; j < len(result); j++ {
-			if result[i][j] - expectedRes[i][j] > 0.000001 {
+			if result[i][j]-expectedRes[i][j] > 0.000001 {
 				t.Error("Expected result on pos:", i, j, ":", expectedRes[i][j], "but obtained:", result[i][j])
 			}
 		}
